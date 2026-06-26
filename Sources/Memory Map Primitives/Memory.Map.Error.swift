@@ -35,18 +35,24 @@ extension Memory.Map {
 }
 
 extension Memory.Map.Error: CustomStringConvertible {
+    /// A human-readable description of the mapping error.
     public var description: Swift.String {
         switch self {
         case .map(let code):
             return "mmap failed (\(code))"
+
         case .unmap(let code):
             return "munmap failed (\(code))"
+
         case .sync(let code):
             return "msync failed (\(code))"
+
         case .protect(let code):
             return "mprotect failed (\(code))"
+
         case .exhausted:
             return "out of memory"
+
         case .invalid(let validation):
             return "invalid argument: \(validation)"
         }

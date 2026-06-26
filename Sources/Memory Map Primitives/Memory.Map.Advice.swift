@@ -18,8 +18,10 @@ extension Memory.Map {
     /// - POSIX: `swift-iso-9945` (`extension Memory.Map.Advice`)
     /// - Windows: `swift-windows-standard` (`extension Memory.Map.Advice`)
     public struct Advice: Sendable, Equatable, Hashable {
+        /// The raw `madvise` advice value.
         public let rawValue: Int32
 
+        /// Creates an advice value from a raw `madvise` constant.
         @inlinable
         public init(rawValue: Int32) {
             self.rawValue = rawValue

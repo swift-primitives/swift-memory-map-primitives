@@ -21,17 +21,19 @@ extension Memory.Map {
     /// - POSIX: `swift-iso-9945`
     /// - Windows: `swift-windows-standard`
     public struct Options: Sendable, Equatable, Hashable {
+        /// The raw platform flag bits.
         public let rawValue: Int32
 
+        /// Creates options from raw platform flag bits.
         @inlinable
         public init(rawValue: Int32) {
             self.rawValue = rawValue
         }
 
-        /// Combines multiple flags.
+        /// Combines two option sets by OR-ing their raw flag bits.
         @inlinable
-        public static func | (lhs: Options, rhs: Options) -> Options {
-            Options(rawValue: lhs.rawValue | rhs.rawValue)
+        public static func | (lhs: Self, rhs: Self) -> Self {
+            Self(rawValue: lhs.rawValue | rhs.rawValue)
         }
     }
 }

@@ -22,6 +22,7 @@ extension Memory.Map.Error {
 }
 
 extension Memory.Map.Error.Validation: CustomStringConvertible {
+    /// A human-readable description of the validation failure.
     public var description: Swift.String {
         switch self {
         case .length: return "length must be greater than zero"

@@ -20,31 +20,33 @@ extension Memory.Map {
     /// - POSIX: `swift-iso-9945`
     /// - Windows: `swift-windows-standard`
     public struct Protection: Sendable, Equatable, Hashable, ExpressibleByArrayLiteral {
+        /// The raw platform protection bits.
         public let rawValue: Int32
 
+        /// Creates a protection value from raw platform protection bits.
         @inlinable
         public init(rawValue: Int32) {
             self.rawValue = rawValue
         }
 
         /// No access permitted.
-        public static let none = Protection(rawValue: 0)
+        public static let none = Self(rawValue: 0)
 
-        /// Combines multiple protection flags.
+        /// Combines two protection values by OR-ing their raw bits.
         @inlinable
-        public static func | (lhs: Protection, rhs: Protection) -> Protection {
-            Protection(rawValue: lhs.rawValue | rhs.rawValue)
+        public static func | (lhs: Self, rhs: Self) -> Self {
+            Self(rawValue: lhs.rawValue | rhs.rawValue)
         }
 
-        /// Checks if this contains another protection flag.
+        /// Returns whether this protection value contains every bit of another.
         @inlinable
-        public func contains(_ other: Protection) -> Bool {
+        public func contains(_ other: Self) -> Bool {
             (rawValue & other.rawValue) == other.rawValue
         }
 
-        /// Creates a protection value from an array of protection flags.
+        /// Creates a protection value by OR-ing an array of protection flags.
         @inlinable
-        public init(arrayLiteral elements: Protection...) {
+        public init(arrayLiteral elements: Self...) {
             self.rawValue = elements.reduce(0) { $0 | $1.rawValue }
         }
     }

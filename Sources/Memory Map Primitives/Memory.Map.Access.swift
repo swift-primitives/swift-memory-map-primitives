@@ -21,8 +21,10 @@ extension Memory.Map {
     /// - `.write` requires `.read` on most platforms (POSIX constraint)
     /// - `.execute` is intentionally not included due to portability and security concerns
     public struct Access: OptionSet, Sendable, Hashable {
+        /// The raw bitmask of access permissions.
         public let rawValue: Int
 
+        /// Creates an access permission set from a raw bitmask.
         @inlinable
         public init(rawValue: Int) {
             self.rawValue = rawValue

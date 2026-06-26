@@ -12,6 +12,9 @@
 public import Byte_Primitives
 
 extension Memory.Map {
+    // SAFETY: Safe by construction — backing storage uses only stdlib
+    // SAFETY: safe types; `@safe` documents that this type performs no
+    // SAFETY: unsafe operations.
     /// A mapped memory region.
     ///
     /// Represents a region of memory that has been mapped into the process
@@ -25,9 +28,6 @@ extension Memory.Map {
     /// Region creation and unmapping are in platform-specific packages:
     /// - POSIX: `swift-iso-9945` (`extension Memory.Map`)
     /// - Windows: `swift-windows-standard` (`extension Memory.Map`)
-    // SAFETY: Safe by construction — backing storage uses only stdlib
-    // SAFETY: safe types; `@safe` documents that this type performs no
-    // SAFETY: unsafe operations.
     @safe
     public struct Region: Sendable {
         /// The base address of the mapped region.
@@ -54,10 +54,10 @@ extension Memory.Map.Region {
 
     /// A span of the region's bytes.
     @inlinable
-    public var span: Span<Byte> {
+    public var span: Swift.Span<Byte> {
         @_lifetime(borrow self) borrowing get {
             let pointer = unsafe base.pointer.assumingMemoryBound(to: Byte.self)
-            let s = unsafe Span(_unsafeStart: pointer, count: count)
+            let s = unsafe Swift.Span(_unsafeStart: pointer, count: count)
             return unsafe _overrideLifetime(s, borrowing: self)
         }
     }

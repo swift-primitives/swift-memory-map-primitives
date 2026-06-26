@@ -24,16 +24,19 @@ extension Memory {
     ///
     /// ## Safety Invariant
     ///
-    /// `~Copyable` prevents aliasing; `@unchecked Sendable` permits move-across-
-    /// thread ownership transfer. Mapping bytes are raw memory: concurrent writes
-    /// to the same offset are data races the caller must synchronize.
+    /// `~Copyable` prevents aliasing. The envelope is deliberately **not**
+    /// `Sendable`: the unmap witness is a stored closure whose captures the
+    /// type cannot see, so cross-isolation transfer is region-checked per
+    /// send — boundary APIs take `consuming sending Memory.Map`. Mapping bytes
+    /// are raw memory: concurrent writes to the same offset are data races the
+    /// caller must synchronize.
     ///
     /// ## Platform Implementation
     ///
     /// Syscall implementations are in platform-specific packages:
     /// - POSIX: `swift-iso-9945` (`extension Memory.Map`)
     /// - Windows: `swift-windows-standard` (`extension Memory.Map`)
-    public struct Map: ~Copyable, @unsafe @unchecked Sendable {
+    public struct Map: ~Copyable {
         /// The underlying kernel memory region.
         @_spi(MemoryInternal)
         public var _region: Memory.Map.Region?
@@ -64,8 +67,13 @@ extension Memory {
         public var _lockToken: Memory.Lock.Token?
 
         /// Platform-syscall cleanup witness (injected at construction).
+        ///
+        /// A plain closure, not `@Sendable`: the witness runs wherever the last
+        /// owner drops the envelope, and region isolation checks each transfer
+        /// at the send site — a witness capturing isolated state is rejected
+        /// there, not laundered through a type-level promise.
         @_spi(MemoryInternal)
-        public let _unmap: @Sendable (Memory.Map.Region) -> Void
+        public let _unmap: (Memory.Map.Region) -> Void
 
         /// Creates a mapping with the given fields and unmap witness.
         ///
@@ -79,7 +87,7 @@ extension Memory {
             sharing: Sharing,
             safety: Safety,
             lockToken: consuming Memory.Lock.Token?,
-            unmap: @escaping @Sendable (Memory.Map.Region) -> Void
+            unmap: @escaping (Memory.Map.Region) -> Void
         ) {
             self._region = region
             self._offsetDelta = offsetDelta
