@@ -9,8 +9,6 @@
 //
 // ===----------------------------------------------------------------------===//
 
-public import Byte_Primitives
-
 extension Memory.Map {
     // SAFETY: Safe by construction — backing storage uses only stdlib
     // SAFETY: safe types; `@safe` documents that this type performs no
@@ -22,6 +20,24 @@ extension Memory.Map {
     ///
     /// Regions are created by platform-specific mapping functions.
     /// Use platform-specific `unmap` to release the region.
+    ///
+    /// ## Zero-Copy Byte Access
+    ///
+    /// `Region` is a plain `Copyable`, `Sendable` VALUE (base + length only):
+    /// it carries no lifetime relationship to the mapping's actual liveness.
+    /// It deliberately does **not** expose a `span` / `mutableSpan` accessor —
+    /// a copy of `Region` taken from a live `Memory.Map` can freely outlive
+    /// the mapping (the ~Copyable envelope), so any byte-view constructed
+    /// from `Region` alone would carry zero liveness guarantee and could
+    /// silently dangle after `munmap`. Zero-copy byte access is provided
+    /// solely by the ~Copyable `Memory.Map` envelope itself (`Memory.Map.span`,
+    /// `Span.Protocol` conformance in `Memory.Map+Span.Protocol.swift`), whose
+    /// `@_lifetime(borrow self)` is anchored to the envelope that actually
+    /// owns the mapping and traps if accessed after unmap.
+    ///
+    /// L2 syscall implementations (`msync`, `mprotect`, `munmap`, …) need
+    /// only `base` and `length` — never a `Span` — so this restriction costs
+    /// them nothing.
     ///
     /// ## Platform Implementation
     ///
@@ -51,24 +67,4 @@ extension Memory.Map.Region {
     /// The byte count of this region.
     @inlinable
     public var count: Int { Int(bitPattern: length) }
-
-    /// A span of the region's bytes.
-    @inlinable
-    public var span: Swift.Span<Byte> {
-        @_lifetime(borrow self) borrowing get {
-            let pointer = unsafe base.pointer.assumingMemoryBound(to: Byte.self)
-            let s = unsafe Swift.Span(_unsafeStart: pointer, count: count)
-            return unsafe _overrideLifetime(s, borrowing: self)
-        }
-    }
-
-    /// A mutable span of the region's bytes.
-    @inlinable
-    public var mutableSpan: MutableSpan<Byte> {
-        @_lifetime(borrow self) borrowing get {
-            let pointer = unsafe base.mutablePointer.assumingMemoryBound(to: Byte.self)
-            let s = unsafe MutableSpan(_unsafeStart: pointer, count: count)
-            return unsafe _overrideLifetime(s, borrowing: self)
-        }
-    }
 }
